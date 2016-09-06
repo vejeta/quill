@@ -20,11 +20,7 @@ trait FinaglePostgresEncoders {
   protected def encoder[T](implicit e: ValueEncoder[T]): Encoder[T] = new ValueEncoderEncoder(e)
   protected def encoder[T, U](f: U => T)(implicit e: ValueEncoder[T]): Encoder[U] = new ValueEncoderEncoder[U](e.contraMap(f))
 
-  override def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] = e match {
-    case v: ValueEncoderEncoder[O] => encoder[O, I](mapped.f)(v.encoder)
-  }
-
-  def optionEncoder[T](implicit e: Encoder[T]): Encoder[Option[T]] = e match {
+  implicit def optionEncoder[T](implicit e: Encoder[T]): Encoder[Option[T]] = e match {
     case v: ValueEncoderEncoder[T] => encoder[Option[T]](option(v.encoder))
   }
 

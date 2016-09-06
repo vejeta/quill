@@ -528,8 +528,6 @@ Actions
 
 Database actions are defined using quotations as well. These actions don't have a collection-like API but rather a custom DSL to express inserts, deletes and updates.
 
-  Note: Actions take either a List (in which case the query is batched) or a single value.
-
 **insert**
 
 ```scala
@@ -902,13 +900,13 @@ trait UUIDEncodingExample {
 }
 ```
 
-Wrapped types
--------------
+`AnyVal`
+--------
 
-Quill also supports encoding of "wrapped types". Just extend the `WrappedValue` trait and Quill will automatically encode the underlying primitive type.
+Quill automatically encodes `AnyVal`s:
 
 ```scala
-case class UserId(value: Int) extends AnyVal with WrappedValue[Int]
+case class UserId(value: Int) extends AnyVal
 case class User(id: UserId, name: String)
 
 val q = quote {
@@ -979,6 +977,7 @@ trait MySchema {
 }
 
 case class MyDao(c: MyContext) extends MySchema {
+  import c._
 
   def allPeople = 
     c.run(people)
@@ -988,7 +987,7 @@ case class MyDao(c: MyContext) extends MySchema {
 SQL Contexts
 ------------
 
-Contexts represent the database and provide an execution interface for queries. Example:
+Example:
 
 ```scala
 lazy val ctx = new JdbcContext[MySQLDialect, SnakeCase]("ctx")

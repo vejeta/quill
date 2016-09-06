@@ -47,15 +47,15 @@ object RenameProperties extends StatelessTransformer {
 
   private def applySchema(q: Query): (Query, Ast) =
     q match {
-      case e: Entity                 => (e, e)
-      case Map(q: Query, x, p)       => applySchema(q, x, p, Map)
-      case Filter(q: Query, x, p)    => applySchema(q, x, p, Filter)
+      case e: Entity => (e, e)
+      case Map(q: Query, x, p) => applySchema(q, x, p, Map)
+      case Filter(q: Query, x, p) => applySchema(q, x, p, Filter)
       case SortBy(q: Query, x, p, o) => applySchema(q, x, p, SortBy(_, _, _, o))
-      case GroupBy(q: Query, x, p)   => applySchema(q, x, p, GroupBy)
+      case GroupBy(q: Query, x, p) => applySchema(q, x, p, GroupBy)
       case Aggregation(op, q: Query) => applySchema(q, Aggregation(op, _))
-      case Take(q: Query, n)         => applySchema(q, Take(_, n))
-      case Drop(q: Query, n)         => applySchema(q, Drop(_, n))
-      case Distinct(q: Query)        => applySchema(q, Distinct)
+      case Take(q: Query, n) => applySchema(q, Take(_, n))
+      case Drop(q: Query, n) => applySchema(q, Drop(_, n))
+      case Distinct(q: Query) => applySchema(q, Distinct)
 
       case FlatMap(q: Query, x, p) =>
         applySchema(q, x, p, FlatMap) match {
@@ -99,8 +99,13 @@ object RenameProperties extends StatelessTransformer {
         List.empty
       case e: ConfiguredEntity =>
         e.properties.map {
-          case PropertyAlias(prop, alias) =>
-            Property(base, prop) -> Property(base, alias)
+          case PropertyAlias(path, alias) =>
+            def apply(base: Ast, path: List[String]): Ast =
+              path match {
+                case Nil => base
+                case head :: tail => apply(Property(base, head), tail)
+              }
+            apply(base, path) -> Property(base, alias)
         }
       case Tuple(values) =>
         values.zipWithIndex.map {

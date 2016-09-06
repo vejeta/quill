@@ -5,9 +5,8 @@ import scala.reflect.macros.whitebox.Context
 import io.getquill.ast.PropertyAlias
 
 case class EntityConfig(
-  alias:      Option[String]      = None,
-  properties: List[PropertyAlias] = List()
-)
+  alias: Option[String] = None,
+  properties: List[PropertyAlias] = List())
 
 trait EntityConfigParsing {
   this: Parsing =>
@@ -25,5 +24,15 @@ trait EntityConfigParsing {
         EntityConfig()
     }
 
-  val propertyAliasParser: Parser[PropertyAlias]
+  private val propertyAliasParser: Parser[PropertyAlias] = Parser[PropertyAlias] {
+    case q"(($x1) => $pack.Predef.ArrowAssoc[$t]($prop).$arrow[$v](${ alias: String }))" =>
+      def path(tree: Tree): List[String] =
+        tree match {
+          case q"$a.$b" =>
+            path(a) :+ b.decodedName.toString
+          case _ =>
+            Nil
+        }
+      PropertyAlias(path(prop), alias)
+  }
 }

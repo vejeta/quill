@@ -4,11 +4,14 @@ import io.getquill.context.sql.EncodingSpec
 import com.twitter.util.Await
 import java.util.Date
 import java.util.UUID
+import io.getquill.context.sql.EncodingTestType
 
 class FinaglePostgresEncodingSpec extends EncodingSpec {
 
   val context = testContext
   import testContext._
+  
+  implicitly[Encoder[EncodingTestType]]
 
   "encodes and decodes types" in {
     val r =
@@ -74,7 +77,7 @@ class FinaglePostgresEncodingSpec extends EncodingSpec {
 
   "returning UUID" in {
     val success = for {
-      uuid <- Await.result(testContext.run(insertBarCode(lift(barCodeEntry))))
+      uuid <- Await.result(testContext.run(insertBarCode.apply(lift(barCodeEntry))))
       barCode <- Await.result(testContext.run(findBarCodeByUuid(uuid))).headOption
     } yield {
       verifyBarcode(barCode)
